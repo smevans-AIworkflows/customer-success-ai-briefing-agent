@@ -1,0 +1,208 @@
+{
+  "name": "AI Customer Briefing Agent v2 - Form Input",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "AI Customer Meeting Briefing Generator",
+        "formDescription": "Generate an AI-powered customer meeting briefing before strategic client conversations.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "company name",
+              "fieldName": "company"
+            },
+            {
+              "fieldLabel": "Meeting Type",
+              "fieldName": "meeting_type"
+            },
+            {
+              "fieldLabel": "Customer Stakeholder",
+              "fieldName": "customer_role"
+            },
+            {
+              "fieldLabel": "Meeting Objective",
+              "fieldType": "dropdown",
+              "fieldName": "meeting_objective",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Renewal discussion"
+                  },
+                  {
+                    "option": "Expansion opportunity"
+                  },
+                  {
+                    "option": "Customer health review"
+                  },
+                  {
+                    "option": "Adoption improvement"
+                  },
+                  {
+                    "option": "Executive relationship building"
+                  },
+                  {
+                    "option": "AI transformation discussion"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        0
+      ],
+      "id": "204a5862-5282-48e1-8687-ce84d647ea6f",
+      "name": "On form submission",
+      "webhookId": "9965cccf-f7b9-4443-b096-08727e3f3394",
+      "notes": "Collects meeting information from the user."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"api_key\": \"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\",\n  \"query\": \"{{$json.company}} company overview latest news investor relations annual report AI initiatives\",\n  \"search_depth\": \"advanced\",\n  \"topic\": \"general\",\n  \"max_results\": 5,\n  \"include_answer\": true,\n  \"include_raw_content\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        192
+      ],
+      "id": "65b39159-3631-4afb-88f8-9bc4286397e1",
+      "name": "Research Company (Tavily)",
+      "notes": "Searches public web sources for company information."
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $json.results.slice(0,5);\n\nconst sources = results.map((item, index) => {\n  return `${index + 1}. ${item.title}\nURL: ${item.url}\nSummary: ${item.content.substring(0, 300)}\n`;\n}).join(\"\\n\\n\");\n\nreturn {\n  json: {\n    sources\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        400
+      ],
+      "id": "7cddfa0d-ff4d-4624-9194-f6f77320cb32",
+      "name": "Format Research Sources",
+      "notes": "Extracts the five highest quality sources for the AI."
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a Senior Customer Success Manager preparing for an executive customer meeting.\n\nCreate a strategic customer briefing using the company research provided below.\n\nCustomer information:\n\nCompany:\n{{$('On form submission').item.json.company}}\n\nMeeting Type:\n{{$('On form submission').item.json.meeting_type}}\n\nCustomer Stakeholder:\n{{$('On form submission').item.json.customer_role}}\n\nMeeting Objective:\n{{$('On form submission').item.json.meeting_objective}}\n\n\nCompany Research:\n\n{{$('Research Company (Tavily)').item.json.answer}}\n\nResearch Sources:\n\n{{$('Format Research Sources').item.json.sources}}\n\nAdditional source material:\n\n{{$('Format Research Sources').item.json.sources}}\n\n\nCreate the briefing with the following sections:\n\n1. Executive Summary\n\n2. Company Overview\n\n3. Current Strategic Priorities\n\n4. AI Transformation Opportunities\n\n5. Customer Success Opportunities\n\nFor Customer Success Opportunities include:\n\n- Adoption opportunities\n- Potential blockers to customer value realization\n- Expansion opportunities\n- Recommended stakeholders to engage\n- Suggested success metrics\n\n6. Discovery Questions\n\n7. Recommended Next Steps\n\n8. Sources Used\n\nFor each recommendation:\n- Explain the business value\n- Avoid unsupported assumptions\n- Clearly distinguish facts from hypotheses\n\nWrite this from the perspective of a Customer Success Manager preparing for an executive customer conversation.\n\nFocus on helping the customer achieve measurable business outcomes, not just describing technology.\n\nFor every recommendation or opportunity include:\n\nConfidence Level:\nHigh / Medium / Low\n\nEvidence:\nState which source(s) support the recommendation.\n\nAssumptions:\nClearly identify anything inferred rather than explicitly stated.\n\nDo not present assumptions as facts.\n\nSource Transparency:\n\nInclude a final section called \"Sources Used\".\n\nFor each source include:\n- Source title\n- URL\n- Why it was relevant\n\nOnly include sources provided in the research data.\nDo not invent URLs."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        144,
+        624
+      ],
+      "id": "b5ff2448-dcef-4838-91d5-35953b9469cd",
+      "name": "Generate Executive Briefing",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      },
+      "notes": "Creates a customer success briefing using research and user context."
+    },
+    {
+      "parameters": {
+        "operation": "html",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        848
+      ],
+      "id": "e17fadb0-bed3-4978-834f-1f0232c6ba05",
+      "name": "Convert to File"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Research Company (Tavily)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Company (Tavily)": {
+      "main": [
+        [
+          {
+            "node": "Format Research Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Research Sources": {
+      "main": [
+        [
+          {
+            "node": "Generate Executive Briefing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Executive Briefing": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "e62361c3-0a9e-4caf-8daa-c09558822eda",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b49f08c20dd7f48e63f013aef1d743ff9a37b13e1393fa7329b1aa72b57ae635"
+  },
+  "nodeGroups": [],
+  "id": "HjAZzVOMY7ReESph",
+  "tags": []
+}
