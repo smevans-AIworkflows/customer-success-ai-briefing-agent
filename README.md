@@ -2,7 +2,7 @@
 
 An AI-powered Customer Success briefing generator built in n8n.
 
-This workflow automatically researches a customer before a meeting, analyses public information using GPT-5, and generates an executive-quality strategic briefing.
+This workflow automatically researches a customer before a meeting, analyses public information using GPT-5, and generates an executive-quality strategic briefing. The objective was to think of common business meetings/customer success meetings I have been leading over the last two years and map how an AI workflow could enhance this journey.
 
 ## Features
 
